@@ -12,9 +12,7 @@ public class RecordWriter {
         this.writeChannel = Objects.requireNonNull(writeChannel);
     }
 
-    public record WriteResult(long writeOffset) {}
-
-    public WriteResult write(Record record) {
+    public RecordWriteResult write(Record record) {
         try {
             ByteBuffer buffer = ByteBuffer.allocate(FormatInfo.HEADER_SIZE + record.key().length + record.value().length);
             buffer.putInt(record.key().length);
@@ -23,7 +21,7 @@ public class RecordWriter {
             buffer.put(record.value());
             buffer.flip();
 
-            WriteResult result = new WriteResult(writeChannel.position());
+            RecordWriteResult result = new RecordWriteResult(writeChannel.position());
             // Note: writes are not fsynced per-record for performance reasons.
             // Data in the OS page cache may be lost on a hard crash.
             // This needs to be handled using a separate mechanism.

@@ -15,9 +15,7 @@ public class RecordReader {
         this.readChannel = Objects.requireNonNull(readChannel);
     }
 
-    public record ReadResult(Record record, long nextRecordOffset) {}
-
-    public ReadResult read(long offset) {
+    public RecordReadResult read(long offset) {
         try {
             ByteBuffer headerBuffer = ByteBuffer.allocate(HEADER_SIZE);
             readIntoBuffer(headerBuffer, offset);
@@ -36,7 +34,7 @@ public class RecordReader {
 
             long nextRecordOffset = offset + HEADER_SIZE + keyDataSize + valueDataSize;
 
-            return new ReadResult(new Record(keyData, valueData), nextRecordOffset);
+            return new RecordReadResult(new Record(keyData, valueData), nextRecordOffset);
         } catch (BufferUnderflowException e) {
             throw new RecordIOException("Data corruption detected: unexpected end of record data at offset: " + offset, e);
         } catch (IOException e) {

@@ -13,7 +13,7 @@ public class SegmentFileDiscoverer {
     public SegmentFileDiscoverer(Path segmentDir) {
         this.segmentDir = Objects.requireNonNull(segmentDir);
         if (!Files.isDirectory(this.segmentDir)) {
-            throw new SegmentFileDiscoveryException(segmentDir + " is not a directory, expected a directory with segment files");
+            throw new SegmentFileException(segmentDir + " is not a directory, expected a directory with segment files");
         }
     }
 

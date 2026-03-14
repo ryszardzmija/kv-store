@@ -1,11 +1,11 @@
-package com.ryszardzmija.segment;
+package com.ryszardzmija.segment.model;
 
+import com.ryszardzmija.format.RecordWriteResult;
 import com.ryszardzmija.format.RecordWriter;
 import com.ryszardzmija.format.Record;
 import com.ryszardzmija.index.ByteKey;
 import com.ryszardzmija.index.Index;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public class SegmentWriter {
@@ -17,9 +17,9 @@ public class SegmentWriter {
         this.index = Objects.requireNonNull(index);
     }
 
-    public void put(ByteKey key, byte[] value) throws IOException {
-        var record = new Record(key.getData(), value);
-        var writeResult = recordWriter.write(record);
+    public void put(ByteKey key, byte[] value) {
+        Record record = new Record(key.getData(), value);
+        RecordWriteResult writeResult = recordWriter.write(record);
         index.putKeyOffset(key, writeResult.writeOffset());
     }
 }
