@@ -1,5 +1,6 @@
 package com.ryszardzmija.index;
 
+import com.ryszardzmija.format.RecordIOException;
 import com.ryszardzmija.format.RecordReader;
 
 import java.io.IOException;
@@ -10,13 +11,17 @@ public class IndexBuilder {
     private final FileChannel readChannel;
     private final RecordReader recordReader;
 
-    public IndexBuilder(FileChannel readChannel) throws IOException {
+    public IndexBuilder(FileChannel readChannel) {
         this.readChannel = Objects.requireNonNull(readChannel);
         this.recordReader = new RecordReader(readChannel);
     }
 
-    public Index build() throws IOException {
-        return createIndex();
+    public Index build() {
+        try {
+            return createIndex();
+        } catch (RecordIOException | IOException e) {
+            throw new IndexBuildException("Failed to build index", e);
+        }
     }
 
     private Index createIndex() throws IOException {

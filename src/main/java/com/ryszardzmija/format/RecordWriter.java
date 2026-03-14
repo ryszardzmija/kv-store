@@ -12,21 +12,25 @@ public class RecordWriter {
         this.writeChannel = Objects.requireNonNull(writeChannel);
     }
 
-    public record WriteResult(long writeOffset) {}
+    public RecordWriteResult write(Record record) {
+        try {
+            ByteBuffer buffer = ByteBuffer.allocate(FormatInfo.HEADER_SIZE + record.key().length + record.value().length);
+            buffer.putInt(record.key().length);
+            buffer.putInt(record.value().length);
+            buffer.put(record.key());
+            buffer.put(record.value());
+            buffer.flip();
 
-    public WriteResult write(Record record) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(FormatInfo.HEADER_SIZE + record.key().length + record.value().length);
-        buffer.putInt(record.key().length);
-        buffer.putInt(record.value().length);
-        buffer.put(record.key());
-        buffer.put(record.value());
-        buffer.flip();
+            RecordWriteResult result = new RecordWriteResult(writeChannel.position());
+            // Note: writes are not fsynced per-record for performance reasons.
+            // Data in the OS page cache may be lost on a hard crash.
+            // This needs to be handled using a separate mechanism.
+            writeFromBuffer(buffer);
 
-        WriteResult result = new WriteResult(writeChannel.position());
-        writeFromBuffer(buffer);
-        writeChannel.force(false);
-
-        return result;
+            return result;
+        } catch (IOException e) {
+            throw new RecordIOException("Record writing record data", e);
+        }
     }
 
     private void writeFromBuffer(ByteBuffer buffer) throws IOException {

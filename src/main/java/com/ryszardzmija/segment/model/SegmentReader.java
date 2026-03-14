@@ -1,10 +1,10 @@
-package com.ryszardzmija.segment;
+package com.ryszardzmija.segment.model;
 
+import com.ryszardzmija.format.RecordReadResult;
 import com.ryszardzmija.format.RecordReader;
 import com.ryszardzmija.index.ByteKey;
 import com.ryszardzmija.index.Index;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -17,20 +17,14 @@ public class SegmentReader {
         this.index = Objects.requireNonNull(index);
     }
 
-    public boolean containsKey(ByteKey key) {
-        return index.containsKey(key);
-    }
-
-    public Optional<byte[]> get(ByteKey key) throws IOException {
+    public Optional<byte[]> get(ByteKey key) {
         Optional<Long> offset = index.getKeyOffset(key);
 
         if (offset.isEmpty()) {
             return Optional.empty();
         }
 
-        var readResult = recordReader.read(offset.get());
-        var record = readResult.record();
-
-        return Optional.of(record.value());
+        RecordReadResult readResult = recordReader.read(offset.get());
+        return Optional.of(readResult.record().value());
     }
 }

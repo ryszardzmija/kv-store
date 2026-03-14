@@ -1,20 +1,53 @@
 package com.ryszardzmija;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class Main {
-    static void main(String[] args) {
-        try (KeyValueStore keyValueStore = new KeyValueStore(Path.of("logfile"))) {
-            keyValueStore.put("hello", "world");
-            System.out.println(keyValueStore.get("hello").orElseThrow());
-            keyValueStore.put("answer", "42");
-            System.out.println(keyValueStore.get("answer").orElseThrow());
-            keyValueStore.put("hello", "universe");
-            System.out.println(keyValueStore.get("hello").orElseThrow());
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
+    void main() {
+        Path segmentDir = Path.of("data/segments");
+        try {
+            Files.createDirectories(segmentDir);
+            try (var store = new KeyValueStore(segmentDir)) {
+                store.put(getBytes("Greeting"), getBytes("Hello, World!"));
+                store.put(getBytes("Answer"), getBytes("42"));
+
+                Optional<byte[]> greetingResult = store.get(getBytes("Answer"));
+                if (greetingResult.isPresent()) {
+                    String decodedGreeting = new String(greetingResult.get(), StandardCharsets.UTF_8);
+                    System.out.println("Key: Greeting, Value: " + decodedGreeting);
+                }
+                Optional<byte[]> answerResult = store.get(getBytes("Answer"));
+                if (answerResult.isPresent()) {
+                    String decodedAnswer = new String(answerResult.get(), StandardCharsets.UTF_8);
+                    System.out.println("Key: Answer, Value: " + decodedAnswer);
+                }
+
+                store.put(getBytes("Greeting"), getBytes("Hello, Universe!"));
+                greetingResult = store.get(getBytes("Greeting"));
+                if (greetingResult.isPresent()) {
+                    String decodedGreeting = new String(greetingResult.get(), StandardCharsets.UTF_8);
+                    System.out.println("Key: Greeting, Value: " + decodedGreeting);
+                }
+            }
         } catch (IOException e) {
-            System.err.println("Fatal error: " + e);
+            logger.error("Failed to create segment directory {}", segmentDir, e);
+            System.exit(1);
+        } catch (RuntimeException e) {
+            logger.error("Fatal error during execution", e);
             System.exit(1);
         }
+    }
+
+    private byte[] getBytes(String str) {
+        return str.getBytes(StandardCharsets.UTF_8);
     }
 }

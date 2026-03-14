@@ -1,6 +1,7 @@
 package com.ryszardzmija.format;
 
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Objects;
@@ -14,28 +15,31 @@ public class RecordReader {
         this.readChannel = Objects.requireNonNull(readChannel);
     }
 
-    public record RecordRead(Record record, long nextRecordOffset) {}
+    public RecordReadResult read(long offset) {
+        try {
+            ByteBuffer headerBuffer = ByteBuffer.allocate(HEADER_SIZE);
+            readIntoBuffer(headerBuffer, offset);
+            headerBuffer.flip();
+            int keyDataSize = headerBuffer.getInt();
+            int valueDataSize = headerBuffer.getInt();
 
-    public RecordRead read(long offset) throws IOException {
-        // TODO: Handle buffer underflow exception
-        ByteBuffer headerBuffer = ByteBuffer.allocate(HEADER_SIZE);
-        readIntoBuffer(headerBuffer, offset);
-        headerBuffer.flip();
-        int keyDataSize = headerBuffer.getInt();
-        int valueDataSize = headerBuffer.getInt();
+            ByteBuffer dataBuffer = ByteBuffer.allocate(keyDataSize + valueDataSize);
+            readIntoBuffer(dataBuffer, offset + HEADER_SIZE);
+            dataBuffer.flip();
 
-        ByteBuffer dataBuffer = ByteBuffer.allocate(keyDataSize + valueDataSize);
-        readIntoBuffer(dataBuffer, offset + HEADER_SIZE);
-        dataBuffer.flip();
+            byte[] keyData = new byte[keyDataSize];
+            byte[] valueData = new byte[valueDataSize];
+            dataBuffer.get(keyData);
+            dataBuffer.get(valueData);
 
-        byte[] keyData = new byte[keyDataSize];
-        byte[] valueData = new byte[valueDataSize];
-        dataBuffer.get(keyData);
-        dataBuffer.get(valueData);
+            long nextRecordOffset = offset + HEADER_SIZE + keyDataSize + valueDataSize;
 
-        long nextRecordOffset = offset + HEADER_SIZE + keyDataSize + valueDataSize;
-
-        return new RecordRead(new Record(keyData, valueData), nextRecordOffset);
+            return new RecordReadResult(new Record(keyData, valueData), nextRecordOffset);
+        } catch (BufferUnderflowException e) {
+            throw new RecordIOException("Data corruption detected: unexpected end of record data at offset: " + offset, e);
+        } catch (IOException e) {
+            throw new RecordIOException("Error reading record data at offset: " + offset, e);
+        }
     }
 
     private void readIntoBuffer(ByteBuffer buffer, long offset) throws IOException {
