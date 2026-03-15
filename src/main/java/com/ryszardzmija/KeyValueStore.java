@@ -1,7 +1,8 @@
 package com.ryszardzmija;
 
-import com.ryszardzmija.segment.SegmentManager;
-import com.ryszardzmija.segment.SegmentManagerException;
+import com.ryszardzmija.storage.hash.HashIndexEngine;
+import com.ryszardzmija.storage.StorageEngine;
+import com.ryszardzmija.storage.StorageEngineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,14 +13,14 @@ import java.util.Optional;
 public class KeyValueStore implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(KeyValueStore.class);
 
-    private final SegmentManager segmentManager;
+    private final StorageEngine storageEngine;
 
     public KeyValueStore(Path segmentDir) {
         Objects.requireNonNull(segmentDir);
 
         try {
-            this.segmentManager = new SegmentManager(segmentDir);
-        } catch (SegmentManagerException e) {
+            this.storageEngine = new HashIndexEngine(segmentDir);
+        } catch (StorageEngineException e) {
             logger.error("Key-value store startup failed", e);
             throw e;
         }
@@ -27,8 +28,8 @@ public class KeyValueStore implements AutoCloseable {
 
     public void put(byte[] key, byte[] value) {
         try {
-            segmentManager.put(key, value);
-        } catch (SegmentManagerException e) {
+            storageEngine.put(key, value);
+        } catch (StorageEngineException e) {
             logger.error("Failed to store key-value pair", e);
             throw e;
         }
@@ -36,8 +37,8 @@ public class KeyValueStore implements AutoCloseable {
 
     public Optional<byte[]> get(byte[] key) {
         try {
-            return segmentManager.get(key);
-        } catch (SegmentManagerException e) {
+            return storageEngine.get(key);
+        } catch (StorageEngineException e) {
             logger.error("Failed to retrieve key-value pair", e);
             throw e;
         }
@@ -45,7 +46,7 @@ public class KeyValueStore implements AutoCloseable {
 
     @Override
     public void close() {
-        segmentManager.close();
+        storageEngine.close();
     }
 
 }
