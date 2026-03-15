@@ -1,5 +1,8 @@
 package com.ryszardzmija;
 
+import com.ryszardzmija.storage.config.StorageConfig;
+import com.ryszardzmija.storage.config.StorageConfigHolder;
+import com.ryszardzmija.storage.config.StorageConfigLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,10 +12,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class Main {
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+public class Application {
+    private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
     void main() {
+        StorageConfig storageConfig = StorageConfigLoader.loadFromFile(Path.of("config/application.yaml"));
+        StorageConfigHolder.initialize(storageConfig);
+
         Path segmentDir = Path.of("data/segments");
         try {
             Files.createDirectories(segmentDir);
@@ -20,10 +26,10 @@ public class Main {
                 store.put(getBytes("Greeting"), getBytes("Hello, World!"));
                 store.put(getBytes("Answer"), getBytes("42"));
 
-                Optional<byte[]> greetingResult = store.get(getBytes("Answer"));
+                Optional<byte[]> greetingResult = store.get(getBytes("Greeting"));
                 if (greetingResult.isPresent()) {
                     String decodedGreeting = new String(greetingResult.get(), StandardCharsets.UTF_8);
-                    System.out.println("Key: Answer, Value: " + decodedGreeting);
+                    System.out.println("Key: Greeting, Value: " + decodedGreeting);
                 }
                 Optional<byte[]> answerResult = store.get(getBytes("Answer"));
                 if (answerResult.isPresent()) {
