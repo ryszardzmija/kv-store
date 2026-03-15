@@ -23,7 +23,7 @@ public class Main {
                 Optional<byte[]> greetingResult = store.get(getBytes("Answer"));
                 if (greetingResult.isPresent()) {
                     String decodedGreeting = new String(greetingResult.get(), StandardCharsets.UTF_8);
-                    System.out.println("Key: Greeting, Value: " + decodedGreeting);
+                    System.out.println("Key: Answer, Value: " + decodedGreeting);
                 }
                 Optional<byte[]> answerResult = store.get(getBytes("Answer"));
                 if (answerResult.isPresent()) {
