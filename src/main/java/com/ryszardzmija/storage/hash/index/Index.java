@@ -4,7 +4,7 @@ import java.util.Optional;
 
 public interface Index {
     /**
-     * Atomically marks the key as present and stores its offset within the segment.
+     * Marks the key as present and stores its offset within the segment.
      *
      * @param key the key to be marked and stored
      * @param offset the offset of the record for the key within the segment
@@ -28,7 +28,7 @@ public interface Index {
     boolean isDeleted(ByteKey key);
 
     /**
-     * Atomically checks if a key is present and retrieves its offset.
+     * Checks if a key is present and retrieves its offset.
      *
      * @param key the key used for checking and retrieving
      * @return the offset if present, {@link Optional#empty()} if not present or deleted

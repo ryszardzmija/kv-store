@@ -103,6 +103,17 @@ public class HashIndexEngine implements StorageEngine {
         }
     }
 
+    /**
+     * Deletes the key-value pair associated with the key.
+     *
+     * <p>Note that each deletion writes a tombstone record for the key, which means that
+     * even though repeated deletions on the same key do not change the state of the store,
+     * they are still accumulated on the disk.
+     *
+     * @param key a non-empty array of bytes representing the key
+     * @throws IllegalArgumentException if the key is null or empty
+     * @throws StorageEngineException if the key-value pair associated with the key fails to be deleted
+     */
     @Override
     public void delete(byte[] key) {
         if (key == null || key.length == 0) {
