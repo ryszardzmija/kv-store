@@ -1,1 +1,4 @@
-rootProject.name = "kv-store"
+rootProject.name = "shaledb"
+
+include("storage")
+include("server")

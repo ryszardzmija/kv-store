@@ -1,23 +1,30 @@
 plugins {
-    id("java")
+    java
 }
 
-group = "com.ryszardzmija"
-version = "1.0-SNAPSHOT"
+subprojects {
+    apply(plugin = "java")
 
-repositories {
-    mavenCentral()
-}
+    group = "com.ryszardzmija.shaledb"
+    version = "1.0-SNAPSHOT"
 
-dependencies {
-    implementation("ch.qos.logback:logback-classic:1.5.32")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.1")
+    repositories {
+        mavenCentral()
+    }
 
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
 
-tasks.test {
-    useJUnitPlatform()
+    dependencies {
+        testImplementation(platform("org.junit:junit-bom:5.10.0"))
+        testImplementation("org.junit.jupiter:junit-jupiter")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+        testImplementation("org.assertj:assertj-core:3.27.7")
+        testImplementation("org.mockito:mockito-core:5.23.0")
+        testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
+
+        implementation("ch.qos.logback:logback-classic:1.5.32")
+    }
 }
