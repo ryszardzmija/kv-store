@@ -3,6 +3,7 @@ package com.ryszardzmija.shaledb.server.config;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
@@ -21,12 +22,15 @@ public class ApplicationConfigLoader {
     public static ApplicationConfigLoader fromYAML() {
         ObjectMapper mapper = YAMLMapper.builder()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true)
+                .configure(DeserializationFeature.ACCEPT_FLOAT_AS_INT, false)
+                .configure(MapperFeature.ALLOW_COERCION_OF_SCALARS, false)
                 .build();
         return new ApplicationConfigLoader(mapper);
     }
 
     public ApplicationConfigDto loadFromFile(Path configFile) {
-        validateConfigFile(configFile);
+        checkFileAccessibility(configFile);
+        checkFileNotEmpty(configFile);
 
         ApplicationConfigDto appConfig;
 
@@ -40,13 +44,10 @@ public class ApplicationConfigLoader {
             throw new ConfigLoadingException("Error reading configuration file: " + configFile, e);
         }
 
-        if (appConfig == null) {
-            throw new ConfigLoadingException("Configuration file is empty: " + configFile);
-        }
         return appConfig;
     }
 
-    private static void validateConfigFile(Path configFile) {
+    private static void checkFileAccessibility(Path configFile) {
         if (configFile == null) {
             throw new ConfigLoadingException("Configuration file must not be null");
         }
@@ -61,6 +62,16 @@ public class ApplicationConfigLoader {
 
         if (!Files.isReadable(configFile)) {
             throw new ConfigLoadingException("Configuration file is not readable: " + configFile);
+        }
+    }
+
+    private static void checkFileNotEmpty(Path configFile) {
+        try {
+            if (Files.size(configFile) == 0) {
+                throw new ConfigLoadingException("Configuration file is empty: " + configFile);
+            }
+        } catch (IOException e) {
+            throw new ConfigLoadingException("Error reading configuration file: " + configFile, e);
         }
     }
 }
