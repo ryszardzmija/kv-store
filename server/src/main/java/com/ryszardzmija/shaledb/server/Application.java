@@ -27,7 +27,7 @@ public class Application {
         ApplicationConfigDto applicationConfig = applicationConfigLoader.loadFromFile(Path.of(configFile));
 
         StorageConfigMapper storageConfigMapper = new StorageConfigMapper();
-        StorageConfig storageConfig = storageConfigMapper.toStorageConfig(applicationConfig.storage);
+        StorageConfig storageConfig = storageConfigMapper.toStorageConfig(applicationConfig.storage());
 
         try {
             Files.createDirectories(storageConfig.segmentDir());

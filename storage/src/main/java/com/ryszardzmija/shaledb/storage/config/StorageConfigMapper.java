@@ -10,9 +10,9 @@ public class StorageConfigMapper {
 
         try {
             return new StorageConfig(
-                    require(storageConfigDto.maxSegmentSize, "storage.maxSegmentSize"),
-                    require(storageConfigDto.maxPayloadSize, "storage.maxPayloadSize"),
-                    Path.of(require(storageConfigDto.segmentDir, "storage.segmentDir"))
+                    require(storageConfigDto.maxSegmentSize(), "storage.maxSegmentSize"),
+                    require(storageConfigDto.maxPayloadSize(), "storage.maxPayloadSize"),
+                    Path.of(require(storageConfigDto.segmentDir(), "storage.segmentDir"))
             );
         } catch (IllegalArgumentException e) {
             throw new StorageConfigException("Invalid storage configuration", e);

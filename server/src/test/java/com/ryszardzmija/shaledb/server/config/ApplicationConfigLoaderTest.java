@@ -143,8 +143,8 @@ class ApplicationConfigLoaderTest {
 
         ApplicationConfigDto config = loader.loadFromFile(configFile);
 
-        assertThat(config.storage.maxSegmentSize).isEqualTo(65536L);
-        assertThat(config.storage.maxPayloadSize).isEqualTo(16384L);
-        assertThat(config.storage.segmentDir).isEqualTo("data/segments");
+        assertThat(config.storage().maxSegmentSize()).isEqualTo(65536L);
+        assertThat(config.storage().maxPayloadSize()).isEqualTo(16384L);
+        assertThat(config.storage().segmentDir()).isEqualTo("data/segments");
     }
 }
