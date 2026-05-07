@@ -1,3 +1,5 @@
 package com.ryszardzmija.shaledb.storage.config;
 
-public record StorageConfigDto(Long maxSegmentSize, Long maxPayloadSize, String segmentDir) {}
+import com.ryszardzmija.shaledb.storage.durability.DurabilityMode;
+
+public record StorageConfigDto(Long maxSegmentSize, Long maxPayloadSize, String segmentDir, DurabilityMode durabilityMode) {}

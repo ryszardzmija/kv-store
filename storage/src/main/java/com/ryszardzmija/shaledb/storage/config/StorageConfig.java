@@ -1,8 +1,10 @@
 package com.ryszardzmija.shaledb.storage.config;
 
+import com.ryszardzmija.shaledb.storage.durability.DurabilityMode;
+
 import java.nio.file.Path;
 
-public record StorageConfig(long maxSegmentSize, long maxPayloadSize, Path segmentDir) {
+public record StorageConfig(long maxSegmentSize, long maxPayloadSize, Path segmentDir, DurabilityMode durabilityMode) {
     public StorageConfig {
         if (maxSegmentSize <= 0) {
             throw new IllegalArgumentException("maxSegmentSize must be greater than 0 bytes, but was " + maxSegmentSize);
@@ -19,6 +21,10 @@ public record StorageConfig(long maxSegmentSize, long maxPayloadSize, Path segme
 
         if (segmentDir == null) {
             throw new IllegalArgumentException("segmentDir must not be null");
+        }
+
+        if (durabilityMode == null) {
+            throw new IllegalArgumentException("durabilityMode must not be null");
         }
     }
 }

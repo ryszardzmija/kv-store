@@ -1,5 +1,6 @@
 package com.ryszardzmija.shaledb.storage.config;
 
+import com.ryszardzmija.shaledb.storage.durability.DurabilityMode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -11,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class StorageConfigTest {
     private static final long VALID_MAX_SEGMENT_SIZE = 65536;
     private static final long VALID_MAX_PAYLOAD_SIZE = 16384;
+    private static final DurabilityMode VALID_DURABILITY_MODE = DurabilityMode.SYNC_EACH_WRITE;
 
     @TempDir
     Path tempDir;
@@ -19,19 +21,21 @@ class StorageConfigTest {
     void acceptsValidConfig() {
         long maxSegmentSize = VALID_MAX_SEGMENT_SIZE;
         long maxPayloadSize = VALID_MAX_PAYLOAD_SIZE;
+        DurabilityMode durabilityMode = VALID_DURABILITY_MODE;
 
-        StorageConfig config = new StorageConfig(maxSegmentSize, maxPayloadSize, tempDir);
+        StorageConfig config = new StorageConfig(maxSegmentSize, maxPayloadSize, tempDir, durabilityMode);
 
         assertThat(config.maxSegmentSize()).isEqualTo(maxSegmentSize);
         assertThat(config.maxPayloadSize()).isEqualTo(maxPayloadSize);
         assertThat(config.segmentDir()).isEqualTo(tempDir);
+        assertThat(config.durabilityMode()).isEqualTo(durabilityMode);
     }
 
     @Test
     void rejectsZeroMaxSegmentSize() {
         long maxSegmentSize = 0;
 
-        assertThatThrownBy(() -> new StorageConfig(maxSegmentSize, VALID_MAX_PAYLOAD_SIZE, tempDir))
+        assertThatThrownBy(() -> new StorageConfig(maxSegmentSize, VALID_MAX_PAYLOAD_SIZE, tempDir, VALID_DURABILITY_MODE))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("maxSegmentSize must be greater than 0 bytes, but was " + maxSegmentSize);
     }
@@ -40,7 +44,7 @@ class StorageConfigTest {
     void rejectsNegativeMaxSegmentSize() {
         long maxSegmentSize = -1;
 
-        assertThatThrownBy(() -> new StorageConfig(maxSegmentSize, VALID_MAX_PAYLOAD_SIZE, tempDir))
+        assertThatThrownBy(() -> new StorageConfig(maxSegmentSize, VALID_MAX_PAYLOAD_SIZE, tempDir, VALID_DURABILITY_MODE))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("maxSegmentSize must be greater than 0 bytes, but was " + maxSegmentSize);
     }
@@ -49,7 +53,7 @@ class StorageConfigTest {
     void rejectsZeroMaxPayloadSize() {
         long maxPayloadSize = 0;
 
-        assertThatThrownBy(() -> new StorageConfig(VALID_MAX_SEGMENT_SIZE, maxPayloadSize, tempDir))
+        assertThatThrownBy(() -> new StorageConfig(VALID_MAX_SEGMENT_SIZE, maxPayloadSize, tempDir, VALID_DURABILITY_MODE))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("maxPayloadSize must be greater than 0 bytes, but was " + maxPayloadSize);
     }
@@ -58,7 +62,7 @@ class StorageConfigTest {
     void rejectsNegativeMaxPayloadSize() {
         long maxPayloadSize = -1;
 
-        assertThatThrownBy(() -> new StorageConfig(VALID_MAX_SEGMENT_SIZE, maxPayloadSize, tempDir))
+        assertThatThrownBy(() -> new StorageConfig(VALID_MAX_SEGMENT_SIZE, maxPayloadSize, tempDir, VALID_DURABILITY_MODE))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("maxPayloadSize must be greater than 0 bytes, but was " + maxPayloadSize);
     }
@@ -67,7 +71,7 @@ class StorageConfigTest {
     void rejectsMaxPayloadSizeExceedingMaxSegmentSize() {
         long maxPayloadSize = VALID_MAX_SEGMENT_SIZE + 1;
 
-        assertThatThrownBy(() -> new StorageConfig(VALID_MAX_SEGMENT_SIZE, maxPayloadSize, tempDir))
+        assertThatThrownBy(() -> new StorageConfig(VALID_MAX_SEGMENT_SIZE, maxPayloadSize, tempDir, VALID_DURABILITY_MODE))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("maxPayloadSize must not exceed maxSegmentSize: maxPayloadSize=" +
                         maxPayloadSize + ", maxSegmentSize=" + VALID_MAX_SEGMENT_SIZE);
@@ -75,8 +79,15 @@ class StorageConfigTest {
 
     @Test
     void rejectsNullSegmentDir() {
-        assertThatThrownBy(() -> new StorageConfig(VALID_MAX_SEGMENT_SIZE, VALID_MAX_PAYLOAD_SIZE, null))
+        assertThatThrownBy(() -> new StorageConfig(VALID_MAX_SEGMENT_SIZE, VALID_MAX_PAYLOAD_SIZE, null, VALID_DURABILITY_MODE))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("segmentDir must not be null");
+    }
+
+    @Test
+    void rejectsNullDurabilityMode() {
+        assertThatThrownBy(() -> new StorageConfig(VALID_MAX_SEGMENT_SIZE, VALID_MAX_PAYLOAD_SIZE, tempDir, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("durabilityMode must not be null");
     }
 }

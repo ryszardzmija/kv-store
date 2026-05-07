@@ -1,5 +1,6 @@
 package com.ryszardzmija.shaledb.server.config;
 
+import com.ryszardzmija.shaledb.storage.durability.DurabilityMode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -68,6 +69,7 @@ class ApplicationConfigLoaderTest {
                   maxSegmentSize: 65536
                   maxPayloadSize: 16384
                   segmentDir: data/segments
+                  durabilityMode: SYNC_EACH_WRITE
                 """);
 
         assertThatThrownBy(() -> loader.loadFromFile(configFile))
@@ -82,6 +84,7 @@ class ApplicationConfigLoaderTest {
                   maxSegmentSize: 65536
                   maxPayloadSize: 16384
                   segmentDir: data/segments
+                  durabilityMode: SYNC_EACH_WRITE
                   unknownProperty: 10
                 """);
 
@@ -97,6 +100,7 @@ class ApplicationConfigLoaderTest {
                   maxSegmentSize: 65536
                   maxPayloadSize: 16384
                   segmentDir: data/segments
+                  durabilityMode: SYNC_EACH_WRITE
                 """);
 
         assertThatThrownBy(() -> loader.loadFromFile(configFile))
@@ -111,6 +115,7 @@ class ApplicationConfigLoaderTest {
                   maxSegmentSize: 65536
                   maxPayloadSize: 3.1415
                   segmentDir: data/segments
+                  durabilityMode: SYNC_EACH_WRITE
                 """);
 
         assertThatThrownBy(() -> loader.loadFromFile(configFile))
@@ -125,6 +130,22 @@ class ApplicationConfigLoaderTest {
                   maxSegmentSize: 65536
                   maxPayloadSize: "16384"
                   segmentDir: data/segments
+                  durabilityMode: SYNC_EACH_WRITE
+                """);
+
+        assertThatThrownBy(() -> loader.loadFromFile(configFile))
+                .isInstanceOf(ConfigLoadingException.class)
+                .hasMessageContaining("Configuration file has invalid structure or field types: " + configFile);
+    }
+
+    @Test
+    void rejectsInvalidEnumValue() throws IOException {
+        Path configFile = writeConfigFile("""
+                storage:
+                  maxSegmentSize: 65536
+                  maxPayloadSize: 16384
+                  segmentDir: data/segments
+                  durabilityMode: sync_each_write
                 """);
 
         assertThatThrownBy(() -> loader.loadFromFile(configFile))
@@ -139,6 +160,7 @@ class ApplicationConfigLoaderTest {
                   maxSegmentSize: 65536
                   maxPayloadSize: 16384
                   segmentDir: data/segments
+                  durabilityMode: SYNC_EACH_WRITE
                 """);
 
         ApplicationConfigDto config = loader.loadFromFile(configFile);
@@ -146,5 +168,6 @@ class ApplicationConfigLoaderTest {
         assertThat(config.storage().maxSegmentSize()).isEqualTo(65536L);
         assertThat(config.storage().maxPayloadSize()).isEqualTo(16384L);
         assertThat(config.storage().segmentDir()).isEqualTo("data/segments");
+        assertThat(config.storage().durabilityMode()).isEqualTo(DurabilityMode.SYNC_EACH_WRITE);
     }
 }

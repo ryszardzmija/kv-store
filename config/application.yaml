@@ -2,3 +2,4 @@ storage:
   maxSegmentSize: 65536  # 64 KB
   maxPayloadSize: 16384  # 16 KB
   segmentDir: data/segments
+  durabilityMode: SYNC_EACH_WRITE
