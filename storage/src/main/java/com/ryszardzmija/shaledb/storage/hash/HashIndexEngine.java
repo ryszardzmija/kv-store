@@ -3,6 +3,8 @@ package com.ryszardzmija.shaledb.storage.hash;
 import com.ryszardzmija.shaledb.storage.StorageEngine;
 import com.ryszardzmija.shaledb.storage.StorageEngineException;
 import com.ryszardzmija.shaledb.storage.config.StorageConfig;
+import com.ryszardzmija.shaledb.storage.durability.DurabilityConfig;
+import com.ryszardzmija.shaledb.storage.durability.FileSystemSync;
 import com.ryszardzmija.shaledb.storage.hash.index.ByteKey;
 import com.ryszardzmija.shaledb.storage.hash.segment.files.*;
 import com.ryszardzmija.shaledb.storage.hash.segment.loader.LoadedSegments;
@@ -29,12 +31,13 @@ public class HashIndexEngine implements StorageEngine {
 
         try {
             SegmentConfig segmentConfig = SegmentConfig.from(storageConfig);
+            DurabilityConfig durabilityConfig = DurabilityConfig.from(storageConfig);
 
-            SegmentFileFactory segmentFileFactory = new SegmentFileFactory(storageConfig.segmentDir());
+            SegmentFileFactory segmentFileFactory = new SegmentFileFactory(storageConfig.segmentDir(), new FileSystemSync());
             this.rolloverPolicy = new SizeBasedRolloverPolicy(segmentConfig.maxSegmentSize());
-            this.rolloverHandler = new RolloverHandler(segmentFileFactory, segmentConfig);
+            this.rolloverHandler = new RolloverHandler(segmentFileFactory, new FileSystemSync(), segmentConfig, durabilityConfig);
             SegmentFileDiscoverer segmentFileDiscoverer = new SegmentFileDiscoverer(storageConfig.segmentDir());
-            SegmentLoader segmentLoader = new SegmentLoader(segmentConfig);
+            SegmentLoader segmentLoader = new SegmentLoader(segmentConfig, durabilityConfig);
 
             SegmentLayout segmentLayout = segmentFileDiscoverer.getSegmentFiles(segmentFileFactory);
             LoadedSegments loadedSegments = segmentLoader.loadSegments(segmentLayout);
@@ -134,10 +137,21 @@ public class HashIndexEngine implements StorageEngine {
 
     @Override
     public void close() {
+        StorageEngineException exception = null;
+        try {
+            mutableSegment.sync();
+        } catch (SegmentIOException e) {
+            exception = new StorageEngineException("Failed to flush writeable segment to persistent storage", e);
+        }
+
         mutableSegment.close();
 
         for (ImmutableSegment segment : immutableSegments) {
             segment.close();
+        }
+
+        if (exception != null) {
+            throw exception;
         }
     }
 

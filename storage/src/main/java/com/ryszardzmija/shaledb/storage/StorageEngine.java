@@ -47,9 +47,15 @@ public interface StorageEngine {
     /**
      * Releases all resources held by the storage engine.
      *
-     * <p>After calling this method, later calls to {@link #put(byte[], byte[])} or
-     * {@link #get(byte[])} will result in undefined behavior. Implementations should
-     * ensure that all buffered data is flushed to persistent storage before returning.
+     * <p>Implementations must flush all pending writes to persistent storage before
+     * returning successfully. If pending writes cannot be flushed, this method must
+     * still make a best-effort attempt to release resources and then throw
+     * {@link StorageEngineException}.
+     *
+     * <p>After this method is called, whether it returns successfully or throws,
+     * this storage engine is considered closed and must not be used again.
+     *
+     * @throws StorageEngineException if pending writes cannot be flushed or resources cannot be released
      */
     void close();
 }

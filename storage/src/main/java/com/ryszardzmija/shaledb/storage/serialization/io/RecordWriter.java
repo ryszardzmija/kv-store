@@ -1,5 +1,7 @@
 package com.ryszardzmija.shaledb.storage.serialization.io;
 
+import com.ryszardzmija.shaledb.storage.durability.DurabilityException;
+import com.ryszardzmija.shaledb.storage.durability.FileSystemSync;
 import com.ryszardzmija.shaledb.storage.serialization.spec.FormatInfo;
 import com.ryszardzmija.shaledb.storage.serialization.record.RecordPayload;
 import com.ryszardzmija.shaledb.storage.serialization.record.RecordType;
@@ -14,9 +16,11 @@ import java.util.zip.Checksum;
 
 public class RecordWriter {
     private final FileChannel writeChannel;
+    private final FileSystemSync fileSystemSync;
 
-    public RecordWriter(FileChannel writeChannel) {
+    public RecordWriter(FileChannel writeChannel, FileSystemSync fileSystemSync) {
         this.writeChannel = Objects.requireNonNull(writeChannel);
+        this.fileSystemSync = Objects.requireNonNull(fileSystemSync);
     }
 
     public WriteResult write(WriteRequest request) {
@@ -50,14 +54,20 @@ public class RecordWriter {
             buffer.flip();
 
             WriteResult result = new WriteResult(writeChannel.position());
-            // Note: writes are not fsynced per-record for performance reasons.
-            // Data in the OS page cache may be lost on a hard crash.
-            // This needs to be handled using a separate mechanism.
+
             writeFromBuffer(buffer);
 
             return result;
         } catch (IOException e) {
             throw new RecordIOException("Error writing record data", e);
+        }
+    }
+
+    public void flushToStorage() {
+        try {
+            fileSystemSync.forceFile(writeChannel);
+        } catch (DurabilityException e) {
+            throw new RecordIOException("Error flushing writes to storage", e);
         }
     }
 

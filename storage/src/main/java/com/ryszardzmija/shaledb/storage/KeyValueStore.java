@@ -53,7 +53,11 @@ public class KeyValueStore implements AutoCloseable {
 
     @Override
     public void close() {
-        storageEngine.close();
+        try {
+            storageEngine.close();
+        } catch (StorageEngineException e) {
+            logger.error("Failed to successfully close the storage engine", e);
+            throw e;
+        }
     }
-
 }

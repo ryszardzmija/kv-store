@@ -1,5 +1,7 @@
 package com.ryszardzmija.shaledb.storage.hash.segment.model;
 
+import com.ryszardzmija.shaledb.storage.durability.DurabilityConfig;
+import com.ryszardzmija.shaledb.storage.durability.FileSystemSync;
 import com.ryszardzmija.shaledb.storage.serialization.io.RecordIOException;
 import com.ryszardzmija.shaledb.storage.serialization.io.RecordReader;
 import com.ryszardzmija.shaledb.storage.serialization.io.RecordWriter;
@@ -24,8 +26,9 @@ public class MutableSegment implements AutoCloseable {
     private final FileChannel writeChannel;
     private final SegmentReader segmentReader;
     private final SegmentWriter segmentWriter;
+    private final RecordWriter recordWriter;
 
-    public MutableSegment(Path path, SegmentConfig config) {
+    public MutableSegment(Path path, SegmentConfig segmentConfig, DurabilityConfig durabilityConfig) {
         this.path = Objects.requireNonNull(path);
 
         FileChannel openedReadChannel = null;
@@ -33,12 +36,14 @@ public class MutableSegment implements AutoCloseable {
         try {
             openedReadChannel = FileChannel.open(path, StandardOpenOption.READ);
             openedWriteChannel = FileChannel.open(path, StandardOpenOption.APPEND);
-            Index index = new IndexBuilder(openedReadChannel, config.maxPayloadSize()).build();
+            Index index = new IndexBuilder(openedReadChannel, segmentConfig.maxPayloadSize()).build();
 
             this.readChannel = openedReadChannel;
             this.writeChannel = openedWriteChannel;
-            this.segmentReader = new SegmentReader(new RecordReader(readChannel, config.maxPayloadSize()), index, config.maxSegmentSize());
-            this.segmentWriter = new SegmentWriter(new RecordWriter(writeChannel), index);
+            this.segmentReader = new SegmentReader(new RecordReader(readChannel, segmentConfig.maxPayloadSize()), index, segmentConfig.maxSegmentSize());
+
+            this.recordWriter = new RecordWriter(writeChannel, new FileSystemSync());
+            this.segmentWriter = new SegmentWriter(recordWriter, index, durabilityConfig.durabilityMode());
         } catch (IndexBuildException | IOException e) {
             if (openedReadChannel != null) {
                 try {
@@ -93,6 +98,14 @@ public class MutableSegment implements AutoCloseable {
 
     public Path path() {
         return path;
+    }
+
+    public void sync() {
+        try {
+            recordWriter.flushToStorage();
+        } catch (RecordIOException e) {
+            throw new SegmentIOException("Failed to flush segment " + path + " to durable storage", e);
+        }
     }
 
     @Override
