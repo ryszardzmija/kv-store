@@ -1,5 +1,6 @@
 package com.ryszardzmija.shaledb.storage.hash.segment.loader;
 
+import com.ryszardzmija.shaledb.storage.durability.DurabilityConfig;
 import com.ryszardzmija.shaledb.storage.hash.segment.model.ImmutableSegment;
 import com.ryszardzmija.shaledb.storage.hash.segment.model.MutableSegment;
 import com.ryszardzmija.shaledb.storage.hash.segment.files.SegmentLayout;
@@ -13,10 +14,12 @@ import java.util.List;
 import java.util.Objects;
 
 public class SegmentLoader {
-    private final SegmentConfig config;
+    private final SegmentConfig segmentConfig;
+    private final DurabilityConfig durabilityConfig;
 
-    public SegmentLoader(SegmentConfig config) {
-        this.config = Objects.requireNonNull(config);
+    public SegmentLoader(SegmentConfig segmentConfig, DurabilityConfig durabilityConfig) {
+        this.segmentConfig = Objects.requireNonNull(segmentConfig);
+        this.durabilityConfig = Objects.requireNonNull(durabilityConfig);
     }
 
     public LoadedSegments loadSegments(SegmentLayout segmentLayout) {
@@ -26,11 +29,11 @@ public class SegmentLoader {
         try {
             // Iterate from the newest segment file to the oldest.
             for (int i = immutableSegmentPaths.size() - 1; i >= 0; i--) {
-                immutableSegments.addLast(new ImmutableSegment(immutableSegmentPaths.get(i), config));
+                immutableSegments.addLast(new ImmutableSegment(immutableSegmentPaths.get(i), segmentConfig));
             }
 
             Path mutableSegmentPath = segmentLayout.mutableSegmentPath();
-            MutableSegment mutableSegment = new MutableSegment(mutableSegmentPath, config);
+            MutableSegment mutableSegment = new MutableSegment(mutableSegmentPath, segmentConfig, durabilityConfig);
 
             return new LoadedSegments(immutableSegments, mutableSegment);
         } catch (SegmentIOException e) {
