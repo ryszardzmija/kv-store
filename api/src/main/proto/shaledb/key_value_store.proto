@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package shaledb.v1;
+
+option java_multiple_files = true;
+option java_package = "com.ryszardzmija.shaledb.api.v1";
+option java_outer_classname = "KeyValueStoreProto";
+
+message GetRequest {
+  bytes key = 1;
+}
+
+message GetResponse {
+  bool found = 1;
+  bytes value = 2;
+}
+
+message PutRequest {
+  bytes key = 1;
+  bytes value = 2;
+}
+
+message PutResponse {
+}
+
+message DeleteRequest {
+  bytes key = 1;
+}
+
+message DeleteResponse {
+}
+
+service KeyValueStore {
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Put(PutRequest) returns (PutResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+}
