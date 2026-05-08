@@ -10,3 +10,7 @@ dependencies {
 application {
     mainClass.set("com.ryszardzmija.shaledb.server.Application")
 }
+
+tasks.named<JavaExec>("run") {
+    workingDir = rootProject.projectDir
+}

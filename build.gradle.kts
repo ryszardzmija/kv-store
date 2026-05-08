@@ -1,5 +1,14 @@
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+
 plugins {
     java
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
 }
 
 subprojects {
@@ -7,6 +16,12 @@ subprojects {
 
     group = "com.ryszardzmija.shaledb"
     version = "1.0-SNAPSHOT"
+
+    extensions.configure<JavaPluginExtension> {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(25))
+        }
+    }
 
     repositories {
         mavenCentral()
