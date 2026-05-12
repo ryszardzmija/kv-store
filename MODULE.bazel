@@ -1,0 +1,58 @@
+module(name = "shaledb", version = "1.0-SNAPSHOT")
+
+bazel_dep(name = "rules_java", version = "9.6.1")
+bazel_dep(name = "rules_jvm_external", version = "7.0")
+bazel_dep(name = "rules_proto", version = "7.1.0")
+bazel_dep(name = "rules_proto_grpc_java", version = "5.8.0")
+bazel_dep(name = "contrib_rules_jvm", version = "0.33.0")
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+
+maven.install(
+    version_conflict_policy = "pinned",
+    known_contributing_modules = [
+        "protobuf",
+        "rules_proto_grpc_java",
+    ],
+    boms = [
+        "io.grpc:grpc-bom:1.81.0",
+        "org.junit:junit-bom:5.10.0",
+    ],
+    artifacts = [
+        "ch.qos.logback:logback-classic:1.5.32",
+
+        "com.google.protobuf:protobuf-java:4.34.1",
+        "io.grpc:grpc-protobuf:1.81.0",
+        "io.grpc:grpc-stub:1.81.0",
+        "io.grpc:grpc-netty-shaded:1.81.0",
+        "io.grpc:grpc-api:1.81.0",
+        "io.grpc:grpc-context:1.81.0",
+        "io.grpc:grpc-core:1.81.0",
+        "io.grpc:grpc-netty:1.81.0",
+        "io.grpc:grpc-protobuf-lite:1.81.0",
+        "io.grpc:grpc-util:1.81.0",
+
+        "org.apache.tomcat:annotations-api:6.0.53",
+
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.1",
+
+        "org.junit.jupiter:junit-jupiter",
+        "org.junit.platform:junit-platform-launcher",
+        "org.junit.platform:junit-platform-reporting",
+        "org.assertj:assertj-core:3.27.7",
+        "org.mockito:mockito-core:5.23.0",
+        "org.mockito:mockito-junit-jupiter:5.23.0",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+    ],
+    fetch_sources = True,
+    lock_file = "//:maven_install.json",
+)
+
+maven.amend_artifact(
+    coordinates = "org.apache.tomcat:annotations-api",
+    neverlink = "true",
+)
+
+use_repo(maven, "maven")

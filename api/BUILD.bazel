@@ -1,0 +1,15 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc_java//:defs.bzl", "java_grpc_library")
+
+proto_library(
+    name = "key_value_store_proto",
+    srcs = ["src/main/proto/shaledb/key_value_store.proto"],
+    strip_import_prefix = "src/main/proto",
+    visibility = ["//visibility:public"],
+)
+
+java_grpc_library(
+    name = "api",
+    protos = [":key_value_store_proto"],
+    visibility = ["//visibility:public"],
+)
