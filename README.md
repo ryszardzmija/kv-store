@@ -17,24 +17,24 @@ The longer-term direction is a Dynamo-style distributed key-value store. The loc
 
 ## Building and running
 
-ShaleDB requires JDK 25 or newer. The Gradle wrapper is included, so a separate Gradle installation is not required.
+ShaleDB requires JDK 25 or newer and uses Bazel for builds. Bazelisk is recommended because it reads `.bazelversion` and runs the pinned Bazel version for this repository.
 
 Run the test suite with:
 
 ```bash
-./gradlew test
+bazel test //:tests
 ```
 
 Build the project with:
 
 ```bash
-./gradlew build
+bazel build //server:server
 ```
 
-Run the example workflow with:
+Run the server with:
 
 ```bash
-./gradlew :server:run
+bazel run //server:server
 ```
 
 The example workflow reads `config/application.yaml` by default and stores segment files under `data/segments`.
