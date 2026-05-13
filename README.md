@@ -1,5 +1,7 @@
 # ShaleDB
 
+> ShaleDB has been superseded by the Go rewrite at [ryszardzmija/shaledb-go](https://github.com/ryszardzmija/shaledb-go). New work is happening there, with the distribution layer as the main focus.
+
 <div align="center">
   <img src="assets/logo.png" alt="ShaleDB Logo" width="300"/>
   <p>
@@ -11,9 +13,7 @@
 
 ## Overview
 
-ShaleDB is a persistent key-value store written in Java. Today it implements the local storage-engine layer: append-only segment files, in-memory hash indexes, CRC32C-validated records, tombstone deletes, size-based segment rollover, startup index rebuilds, and validated YAML configuration.
-
-The longer-term direction is a Dynamo-style distributed key-value store. The local storage engine is the first layer of that system, with durability, segment management, serialization, and indexing kept as separate parts of the codebase.
+ShaleDB is a persistent key-value store written in Java. It implements a local storage engine with append-only segment files, in-memory hash indexes, CRC32C-validated records, tombstone deletes, size-based segment rollover, startup index rebuilds, and validated YAML configuration. The store is also available through a small gRPC API for `Get`, `Put`, and `Delete`.
 
 ## Building and running
 
@@ -37,23 +37,21 @@ Run the server with:
 bazel run //server:server
 ```
 
-The example workflow reads `config/application.yaml` by default and stores segment files under `data/segments`.
+The server reads `config/application.yaml` by default, stores segment files under `data/segments`, and exposes the gRPC API on port `50001`.
 
-The public storage API is intentionally small:
+The gRPC API is defined in `api/src/main/proto/shaledb/key_value_store.proto` as `shaledb.v1.KeyValueStore`. It exposes three operations:
 
-```java
-try (var store = new KeyValueStore(storageConfig)) {
-    store.put(key, value);
-    Optional<byte[]> result = store.get(key);
-    store.delete(key);
-}
-```
+- `Get`
+- `Put`
+- `Delete`
 
 ## Project structure
 
+The `api` module defines the `shaledb.v1.KeyValueStore` gRPC service and generated Java bindings.
+
 The `storage` module contains the key-value store implementation. It owns the public `KeyValueStore` API, the hash-indexed storage engine, segment files, record serialization, durability handling, and configuration validation.
 
-The `server` module contains the application entry point and configuration loading.
+The `server` module contains the application entry point, configuration loading, and the gRPC service that connects the network API to the storage engine.
 
 ## Storage design
 
@@ -71,8 +69,4 @@ Runtime storage settings live in `config/application.yaml`. The configuration co
 
 ## Current limitations
 
-The current implementation should be treated as single-threaded. It does not yet support compaction, transactions, snapshots, range scans, or a network protocol. Startup rebuilds indexes by scanning segment files, so startup time grows with the amount of data on disk.
-
-## Roadmap
-
-The next steps are stronger crash recovery, segment compaction, and a gRPC API for the key-value store.
+The current implementation should be treated as single-threaded. The gRPC service serializes storage operations through a single executor, and the storage engine does not support compaction, transactions, snapshots, or range scans. Startup rebuilds indexes by scanning segment files, so startup time grows with the amount of data on disk.
